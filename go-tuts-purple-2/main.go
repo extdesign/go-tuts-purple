@@ -5,6 +5,9 @@ import "fmt"
 var transactions []float64
 
 func main() {
+	arr := make([]int, 5, 10)
+	fmt.Println(arr, len(arr), cap(arr))
+
 	for {
 		transaction := fetchUserTransaction()
 
@@ -15,7 +18,8 @@ func main() {
 		transactions = append(transactions, transaction)
 	}
 
-	printResult()
+	var balance float64 = calculateBalance()
+	fmt.Printf("Сумма транзакций: %.2f\n", balance)
 }
 
 func fetchUserTransaction() float64 {
@@ -25,6 +29,11 @@ func fetchUserTransaction() float64 {
 	return value
 }
 
-func printResult() {
-	fmt.Println(transactions)
+func calculateBalance() float64 {
+	var balance float64
+	for _, value := range transactions {
+		balance += value
+	}
+
+	return balance
 }
