@@ -3,8 +3,9 @@ package main
 import (
 	"errors"
 	"fmt"
-	"slices"
 )
+
+type currencyMap = map[string]float64
 
 const USD_TO_EURO float64 = 1.20
 const USD_TO_RUB float64 = 64.57
@@ -44,8 +45,12 @@ func main() {
 	fmt.Printf("%.2f", result)
 }
 
-func currencies() []string {
-	return []string{"RUB", "USD", "EURO"}
+func currencies() currencyMap {
+	return currencyMap{
+		"RUB":  1,
+		"USD":  64.57,
+		"EURO": 77.48,
+	}
 }
 
 func fetchValueFromUser() (float64, error) {
@@ -64,33 +69,27 @@ func fetchValueFromUser() (float64, error) {
 func fetchCurrencyFromUser() (string, error) {
 	var currenciesCurrent []string
 
-	if len(USER_CURRENCY_FROM) != 0 {
-		for _, currency := range currencies() {
-			if currency != USER_CURRENCY_FROM {
-				currenciesCurrent = append(currenciesCurrent, currency)
-			}
+	for key := range currencies() {
+		if key == USER_CURRENCY_FROM {
+			continue
 		}
-	} else {
-		currenciesCurrent = currencies()
+
+		currenciesCurrent = append(currenciesCurrent, key)
 	}
 
 	fmt.Printf("Введите валюту %v ", currenciesCurrent)
 	var currency string = ""
 	fmt.Scan(&currency)
 
-	if !checkCurrencyFromUser(currenciesCurrent, currency) {
+	if !checkCurrencyFromUser(currency) {
 		return "", errors.New("wrong currency")
 	}
 
 	return currency, nil
 }
 
-func checkCurrencyFromUser(currencies []string, currency string) bool {
-	return slices.Contains(currencies, currency)
-}
-
-func convertEuroToRub() float64 {
-	return USD_TO_EURO * USD_TO_RUB
+func checkCurrencyFromUser(currency string) bool {
+	return currencies()[currency] != 0
 }
 
 func convert() float64 {
@@ -98,32 +97,5 @@ func convert() float64 {
 		return USER_VALUE
 	}
 
-	switch USER_CURRENCY_FROM {
-	case "RUB":
-
-		switch USER_CURRENCY_TO {
-		case "USD":
-			return USER_VALUE / USD_TO_RUB
-		case "EURO":
-			return USER_VALUE / convertEuroToRub()
-		}
-
-	case "USD":
-		switch USER_CURRENCY_TO {
-		case "RUB":
-			return USER_VALUE * USD_TO_RUB
-		case "EURO":
-			return USER_VALUE * USD_TO_EURO
-		}
-
-	case "EURO":
-		switch USER_CURRENCY_TO {
-		case "USD":
-			return USER_VALUE / USD_TO_EURO
-		case "RUB":
-			return USER_VALUE / convertEuroToRub()
-		}
-	}
-
-	return 0
+	return USER_VALUE * (currencies()[USER_CURRENCY_FROM] / currencies()[USER_CURRENCY_TO])
 }
