@@ -3,74 +3,84 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strconv"
 )
 
 type currencyMap = map[string]float64
 
-const USD_TO_EURO float64 = 1.20
-const USD_TO_RUB float64 = 64.57
-
-var USER_VALUE float64 = 0
-var USER_CURRENCY_FROM string = ""
-var USER_CURRENCY_TO string = ""
-
 func main() {
 	var err error
 
-	for {
-		USER_CURRENCY_FROM, err = fetchCurrencyFromUser()
-
-		if err == nil {
-			break
-		}
-	}
-
-	for {
-		USER_VALUE, err = fetchValueFromUser()
-
-		if err == nil {
-			break
-		}
-	}
-
-	for {
-		USER_CURRENCY_TO, err = fetchCurrencyFromUser()
-
-		if err == nil {
-			break
-		}
-	}
-
-	var result float64 = convert()
-	fmt.Printf("%.2f", result)
-}
-
-func currencies() currencyMap {
-	return currencyMap{
+	var currencyMap = currencyMap{
 		"RUB":  1,
 		"USD":  64.57,
 		"EURO": 77.48,
 	}
+
+	var userData = map[string]string{
+		"from":  "",
+		"to":    "",
+		"value": "",
+	}
+
+	for {
+		err = fetchCurrencyFromUser(userData, "from", &currencyMap)
+		if err != nil {
+			fmt.Printf("Ошибка: %s\n", err.Error())
+			continue
+		}
+
+		break
+	}
+
+	for {
+		err = fetchValueFromUser(userData)
+		if err != nil {
+			fmt.Printf("Ошибка: %s\n", err.Error())
+			continue
+		}
+
+		break
+	}
+
+	for {
+		err = fetchCurrencyFromUser(userData, "to", &currencyMap)
+		if err != nil {
+			fmt.Printf("Ошибка: %s\n", err.Error())
+			continue
+		}
+
+		break
+	}
+
+	result, err := convert(userData, &currencyMap)
+
+	if err != nil {
+		fmt.Printf("Ошибка: %s\n", err.Error())
+	}
+
+	fmt.Printf("%.2f", result)
 }
 
-func fetchValueFromUser() (float64, error) {
+func fetchValueFromUser(userData map[string]string) error {
 	fmt.Print("Введите число: ")
 
 	var value float64 = 0
 	fmt.Scan(&value)
 
 	if value <= 0 {
-		return 0, errors.New("value must be grather than 0")
+		return errors.New("value must be grather than 0")
 	}
 
-	return value, nil
+	userData["value"] = fmt.Sprintf("%.2f", value)
+	return nil
 }
 
-func fetchCurrencyFromUser() (string, error) {
+func fetchCurrencyFromUser(userData map[string]string, code string, currencyMap *map[string]float64) error {
 	var currenciesCurrent []string
 
-	for key := range currencies() {
-		if key == USER_CURRENCY_FROM {
+	for key := range *currencyMap {
+		if key == code {
 			continue
 		}
 
@@ -81,21 +91,25 @@ func fetchCurrencyFromUser() (string, error) {
 	var currency string = ""
 	fmt.Scan(&currency)
 
-	if !checkCurrencyFromUser(currency) {
-		return "", errors.New("wrong currency")
+	if _, ok := (*currencyMap)[currency]; !ok {
+		return errors.New("wrong currency")
 	}
 
-	return currency, nil
+	userData[code] = currency
+
+	return nil
 }
 
-func checkCurrencyFromUser(currency string) bool {
-	return currencies()[currency] != 0
-}
+func convert(userData map[string]string, currencyMap *map[string]float64) (float64, error) {
+	value64, err := strconv.ParseFloat(userData["value"], 64)
 
-func convert() float64 {
-	if USER_CURRENCY_FROM == USER_CURRENCY_TO {
-		return USER_VALUE
+	if err != nil {
+		return 0.00, nil
 	}
 
-	return USER_VALUE * (currencies()[USER_CURRENCY_FROM] / currencies()[USER_CURRENCY_TO])
+	if userData["from"] == userData["to"] {
+		return value64, nil
+	}
+
+	return value64 * ((*currencyMap)[userData["from"]] / (*currencyMap)[userData["to"]]), nil
 }
