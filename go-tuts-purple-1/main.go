@@ -3,45 +3,41 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strconv"
 )
 
 type currencyMap = map[string]float64
 
-const USD_TO_EURO float64 = 1.20
-const USD_TO_RUB float64 = 64.57
-
-var USER_VALUE float64 = 0
-var USER_CURRENCY_FROM string = ""
-var USER_CURRENCY_TO string = ""
-
 func main() {
 	var err error
 
-	for {
-		USER_CURRENCY_FROM, err = fetchCurrencyFromUser()
-
-		if err == nil {
-			break
-		}
+	var userData = map[string]string{
+		"from":  "",
+		"to":    "",
+		"value": "",
 	}
 
-	for {
-		USER_VALUE, err = fetchValueFromUser()
-
-		if err == nil {
-			break
-		}
+	err = fetchCurrencyFromUser(userData, "from")
+	if err != nil {
+		fmt.Printf("Ошибка: %s", err.Error())
 	}
 
-	for {
-		USER_CURRENCY_TO, err = fetchCurrencyFromUser()
-
-		if err == nil {
-			break
-		}
+	err = fetchValueFromUser(userData)
+	if err != nil {
+		fmt.Printf("Ошибка: %s", err.Error())
 	}
 
-	var result float64 = convert()
+	err = fetchCurrencyFromUser(userData, "to")
+	if err != nil {
+		fmt.Printf("Ошибка: %s", err.Error())
+	}
+
+	result, err := convert(userData)
+
+	if err != nil {
+		fmt.Printf("Ошибка: %s", err.Error())
+	}
+
 	fmt.Printf("%.2f", result)
 }
 
@@ -53,24 +49,25 @@ func currencies() currencyMap {
 	}
 }
 
-func fetchValueFromUser() (float64, error) {
+func fetchValueFromUser(userData map[string]string) error {
 	fmt.Print("Введите число: ")
 
 	var value float64 = 0
 	fmt.Scan(&value)
 
 	if value <= 0 {
-		return 0, errors.New("value must be grather than 0")
+		return errors.New("value must be grather than 0")
 	}
 
-	return value, nil
+	userData["value"] = fmt.Sprintf("%.2f", value)
+	return nil
 }
 
-func fetchCurrencyFromUser() (string, error) {
+func fetchCurrencyFromUser(userData map[string]string, code string) error {
 	var currenciesCurrent []string
 
 	for key := range currencies() {
-		if key == USER_CURRENCY_FROM {
+		if key == code {
 			continue
 		}
 
@@ -82,20 +79,28 @@ func fetchCurrencyFromUser() (string, error) {
 	fmt.Scan(&currency)
 
 	if !checkCurrencyFromUser(currency) {
-		return "", errors.New("wrong currency")
+		return errors.New("wrong currency")
 	}
 
-	return currency, nil
+	userData[code] = currency
+
+	return nil
 }
 
 func checkCurrencyFromUser(currency string) bool {
 	return currencies()[currency] != 0
 }
 
-func convert() float64 {
-	if USER_CURRENCY_FROM == USER_CURRENCY_TO {
-		return USER_VALUE
+func convert(userData map[string]string) (float64, error) {
+	value64, err := strconv.ParseFloat(userData["value"], 64)
+
+	if err != nil {
+		return 0.00, nil
 	}
 
-	return USER_VALUE * (currencies()[USER_CURRENCY_FROM] / currencies()[USER_CURRENCY_TO])
+	if userData["from"] == userData["to"] {
+		return value64, nil
+	}
+
+	return value64 * (currencies()[userData["from"]] / currencies()[userData["to"]]), nil
 }
