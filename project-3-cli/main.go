@@ -1,69 +1,37 @@
 package main
 
 import (
-	"errors"
 	"fmt"
-	"math/rand/v2"
-	"time"
+	"project-4-password/account"
+	"project-4-password/files"
+
+	"github.com/fatih/color"
 )
 
-type Bin struct {
-	id        string
-	private   bool
-	createdAt time.Time
-	name      string
-}
-
 func main() {
-	List := []string{
-		"name1",
-		"name2",
-		"name3",
+	login := promptData("Введите логин: ")
+	password := promptData("Введите пароль: ")
+	url := promptData("Введите url: ")
+
+	myAccount, err := account.NewAccountWithTimeStamp(&login, &password, &url)
+
+	if err != nil {
+		red := color.New(color.FgRed).PrintfFunc()
+		red("Ошибки при инициализации: %s", err.Error())
+		//fmt.Printf("Ошибки при инициализации: %s\n", err.Error())
+		return
 	}
 
-	BinList := generateBinList(&List)
-	fmt.Println(BinList)
+	fmt.Printf("Ваши данные: %v", myAccount)
+
+	files.WriteFile()
 }
 
-func generateBinList(list *[]string) []Bin {
-	var res []Bin
+func promptData(prompt string) string {
+	c := color.New(color.FgCyan)
+	c.Print(prompt)
 
-	for idx, name := range *list {
-		bin, err := newBin(name, false)
-
-		bin.id = fmt.Sprint(idx) + "-" + bin.id
-
-		if err != nil {
-			fmt.Printf("Не удалось создать Bin с именем: '%s'. Ошибка: %s\n", name, err)
-			continue
-		}
-
-		res = append(res, bin)
-	}
-
+	var res string
+	fmt.Scanln(&res)
 	return res
-}
-
-func newBin(name string, private bool) (Bin, error) {
-	if len(name) == 0 {
-		return Bin{}, errors.New("name is empty")
-	}
-
-	res := Bin{
-		private:   private,
-		createdAt: time.Now(),
-		name:      name,
-	}
-	res.generateId()
-
-	return res, nil
-}
-
-func (bin *Bin) generateId() {
-	symbols := []rune("abcdefABCDEF")
-	res := make([]rune, 10)
-	for i := range 10 {
-		res[i] = symbols[rand.IntN(len(symbols))]
-	}
-	bin.id = string(res)
 }
