@@ -53,5 +53,5 @@ func WriteFile(content []byte, filename string) error {
 }
 
 func isFileJson(fp string) bool {
-	return filepath.Ext(fp) != "json"
+	return filepath.Ext(fp) == "json"
 }
