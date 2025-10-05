@@ -2,21 +2,20 @@ package account
 
 import (
 	"errors"
+	"fmt"
 	"math/rand/v2"
 	"net/url"
 	"time"
+
+	"a.tasks.11/output"
 )
 
 type AccountStruct struct {
-	login    string
-	password string
-	url      string
-}
-
-type AccountWithTimeStamp struct {
-	createdAt time.Time
-	updatedAt time.Time
-	AccountStruct
+	Login     string    `json:"login"`
+	Password  string    `json:"password"`
+	Url       string    `json:"url"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 func (acc *AccountStruct) GeneratePassword(n int) {
@@ -27,18 +26,17 @@ func (acc *AccountStruct) GeneratePassword(n int) {
 		res[i] = lettersRunes[rand.IntN(len(lettersRunes))]
 	}
 
-	acc.password = string(res)
+	acc.Password = string(res)
 }
 
-func NewAccountWithTimeStamp(login, password, urlString *string) (*AccountWithTimeStamp, error) {
-	acc := &AccountWithTimeStamp{
-		createdAt: time.Now(),
-		updatedAt: time.Now(),
-		AccountStruct: AccountStruct{
-			login:    *login,
-			password: *password,
-			url:      *urlString,
-		},
+func NewAccount(login, password, urlString *string) (*AccountStruct, error) {
+
+	acc := &AccountStruct{
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Login:     *login,
+		Password:  *password,
+		Url:       *urlString,
 	}
 
 	err := acc.validateArguments(login, password, urlString)
@@ -47,9 +45,9 @@ func NewAccountWithTimeStamp(login, password, urlString *string) (*AccountWithTi
 		return nil, err
 	}
 
-	acc.login = *login
-	acc.password = *password
-	acc.url = *urlString
+	acc.Login = *login
+	acc.Password = *password
+	acc.Url = *urlString
 
 	return acc, nil
 }
@@ -100,4 +98,9 @@ func (acc *AccountStruct) checkPassword(password *string) error {
 	}
 
 	return nil
+}
+
+func (acc *AccountStruct) Output() {
+	s := fmt.Sprintf("\nLogin: %s\nPassword: %s\nUrl: %s\n\n", acc.Login, acc.Password, acc.Url)
+	output.PrintYellow(s)
 }

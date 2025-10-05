@@ -1,17 +1,21 @@
 package bins
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand/v2"
 	"time"
+
+	"a.tasks.11/output"
+	"a.tasks.11/storage"
 )
 
 type Bin struct {
-	id        string
-	private   bool
-	createdAt time.Time
-	name      string
+	ID        string    `json:"id"`
+	Private   bool      `json:"private"`
+	CreatedAt time.Time `json:"createdAt"`
+	Name      string    `json:"name"`
 }
 
 func BinsExample() {
@@ -31,15 +35,30 @@ func GenerateBinList(list *[]string) []Bin {
 	for idx, name := range *list {
 		bin, err := newBin(name, false)
 
-		bin.id = fmt.Sprint(idx) + "-" + bin.id
+		bin.ID = fmt.Sprint(idx) + "-" + bin.ID
 
 		if err != nil {
-			fmt.Printf("Не удалось создать Bin с именем: '%s'. Ошибка: %s\n", name, err)
+			output.PrintRed(fmt.Sprintf("\nНе удалось создать Bin с именем: '%s'. Ошибка: %s\n\n", name, err))
 			continue
 		}
 
 		res = append(res, bin)
 	}
+
+	storage, err := storage.NewStorage("storage.json")
+
+	if err != nil {
+		output.PrintRed(fmt.Sprintf("\nНе удалось инициализировать Storage. Ошибка: %s\n\n", err))
+	}
+
+	resJSON, err := json.MarshalIndent(res, "", "  ")
+
+	if err != nil {
+		output.PrintRed(fmt.Sprintf("\nНе удалось записать Json строку. Ошибка: %s\n\n", err))
+	}
+
+	storage.Data = resJSON
+	storage.Save()
 
 	return res
 }
@@ -50,9 +69,9 @@ func newBin(name string, private bool) (Bin, error) {
 	}
 
 	res := Bin{
-		private:   private,
-		createdAt: time.Now(),
-		name:      name,
+		Private:   private,
+		CreatedAt: time.Now(),
+		Name:      name,
 	}
 	res.generateId()
 
@@ -65,5 +84,5 @@ func (bin *Bin) generateId() {
 	for i := range 10 {
 		res[i] = symbols[rand.IntN(len(symbols))]
 	}
-	bin.id = string(res)
+	bin.ID = string(res)
 }

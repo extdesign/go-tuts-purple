@@ -1,4 +1,4 @@
-module project-4-password
+module a.tasks.11
 
 go 1.25.1
 

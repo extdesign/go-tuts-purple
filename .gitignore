@@ -37,3 +37,6 @@ go-tuts-purple
 task-map/task-map
 project-password-packages/project-4-password
 task-10.9/project-4-password
+
+# Generated files
+data.json
