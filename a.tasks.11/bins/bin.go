@@ -7,6 +7,7 @@ import (
 	"math/rand/v2"
 	"time"
 
+	"a.tasks.11/files"
 	"a.tasks.11/output"
 	"a.tasks.11/storage"
 )
@@ -45,7 +46,7 @@ func GenerateBinList(list *[]string) []Bin {
 		res = append(res, bin)
 	}
 
-	storage, err := storage.NewStorage("storage.json")
+	storage, err := storage.NewStorage(files.NewJsonDb("storage.json"))
 
 	if err != nil {
 		output.PrintRed(fmt.Sprintf("\nНе удалось инициализировать Storage. Ошибка: %s\n\n", err))

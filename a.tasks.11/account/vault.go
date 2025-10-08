@@ -16,19 +16,25 @@ type Vault struct {
 	UpdatedAt time.Time       `json:"updatedAt"`
 }
 
-var valutFilename string = "data.json"
+type VaultWithDb struct {
+	Vault
+	db files.JsonDb
+}
 
-func NewVault() *Vault {
-	file, err := files.ReadFile(valutFilename)
+func NewVault(db *files.JsonDb) *VaultWithDb {
+	file, err := db.Read()
 
 	if err != nil {
-		return &Vault{
-			Accounts:  []AccountStruct{},
-			UpdatedAt: time.Now(),
+		return &VaultWithDb{
+			Vault: Vault{
+				Accounts:  []AccountStruct{},
+				UpdatedAt: time.Now(),
+			},
+			db: *db,
 		}
 	}
 
-	var vault Vault
+	var vault VaultWithDb
 	err = json.Unmarshal(file, &vault)
 
 	if err != nil {
@@ -36,15 +42,21 @@ func NewVault() *Vault {
 		return nil
 	}
 
-	return &vault
+	return &VaultWithDb{
+		Vault: Vault{
+			Accounts:  []AccountStruct{},
+			UpdatedAt: time.Now(),
+		},
+		db: *db,
+	}
 }
 
-func (vault *Vault) AddAccount(acc AccountStruct) {
+func (vault *VaultWithDb) AddAccount(acc AccountStruct) {
 	vault.Accounts = append(vault.Accounts, acc)
 	vault.save()
 }
 
-func (vault *Vault) FindAccountsByUrl(url string) []AccountStruct {
+func (vault *VaultWithDb) FindAccountsByUrl(url string) []AccountStruct {
 	var result []AccountStruct
 
 	for _, acc := range vault.Accounts {
@@ -56,7 +68,7 @@ func (vault *Vault) FindAccountsByUrl(url string) []AccountStruct {
 	return result
 }
 
-func (vault *Vault) RemoveAccountByUrl(url string) error {
+func (vault *VaultWithDb) RemoveAccountByUrl(url string) error {
 	var accounts []AccountStruct
 	isDeleted := false
 
@@ -77,17 +89,17 @@ func (vault *Vault) RemoveAccountByUrl(url string) error {
 	return errors.New("нет аккаунтов с таким URL")
 }
 
-func (vault *Vault) ToBytes() ([]byte, error) {
-	json, err := json.MarshalIndent(vault, "", "  ")
+func (vault *VaultWithDb) ToBytes() ([]byte, error) {
+	jsonBytes, err := json.MarshalIndent(vault, "", "  ")
 
 	if err != nil {
 		return nil, err
 	}
 
-	return json, nil
+	return jsonBytes, nil
 }
 
-func (vault *Vault) save() {
+func (vault *VaultWithDb) save() {
 	vault.UpdatedAt = time.Now()
 
 	data, err := vault.ToBytes()
@@ -97,5 +109,9 @@ func (vault *Vault) save() {
 		return
 	}
 
-	files.WriteFile(data, valutFilename)
+	err = vault.db.Write(data)
+
+	if err != nil {
+		output.PrintRed(fmt.Sprintf("Ошибка: %s\n\n", err.Error()))
+	}
 }

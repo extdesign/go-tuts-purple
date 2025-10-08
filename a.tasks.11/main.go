@@ -4,14 +4,17 @@ import (
 	"fmt"
 
 	"a.tasks.11/account"
+	"a.tasks.11/files"
 	"a.tasks.11/menu"
 	"a.tasks.11/output"
 )
 
 func main() {
 
+	vaultFilename := "data.json"
+
 	output.PrintBlue("\n__ Менеджер паролей ___\n\n")
-	vault := account.NewVault()
+	vault := account.NewVault(files.NewJsonDb(vaultFilename))
 
 menuVariant:
 	for {
@@ -31,7 +34,7 @@ menuVariant:
 	}
 }
 
-func createAccount(vault *account.Vault) {
+func createAccount(vault *account.VaultWithDb) {
 	login := output.Prompt("Введите логин: ")
 	password := output.Prompt("Введите пароль: ")
 	url := output.Prompt("Введите URL: ")
@@ -46,7 +49,7 @@ func createAccount(vault *account.Vault) {
 	vault.AddAccount(*myAccount)
 }
 
-func findAccount(vault *account.Vault) {
+func findAccount(vault *account.VaultWithDb) {
 	url := output.Prompt("Введите URL: ")
 
 	foundedAccounts := vault.FindAccountsByUrl(url)
@@ -60,7 +63,7 @@ func findAccount(vault *account.Vault) {
 	}
 }
 
-func removeAccount(vault *account.Vault) {
+func removeAccount(vault *account.VaultWithDb) {
 	url := output.Prompt("Введите URL: ")
 	err := vault.RemoveAccountByUrl(url)
 

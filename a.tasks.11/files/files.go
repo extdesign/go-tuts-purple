@@ -9,13 +9,23 @@ import (
 	"a.tasks.11/output"
 )
 
-func ReadFile(filename string) ([]byte, error) {
-	if !isFileJson(filename) {
+type JsonDb struct {
+	filename string
+}
+
+func NewJsonDb(name string) *JsonDb {
+	return &JsonDb{
+		filename: name,
+	}
+}
+
+func (db *JsonDb) Read() ([]byte, error) {
+	if !isFileJson(db.filename) {
 		output.PrintRed("\nФайл должен быть с расширением json\n\n")
 		return nil, errors.New("файл должен быть с расширением json")
 	}
 
-	data, err := os.ReadFile(filename)
+	data, err := os.ReadFile(db.filename)
 
 	if err != nil {
 		output.PrintRed(fmt.Sprintf("\nНе удалось прочитать данные из файла. Ошибка: %s\n\n", err.Error()))
@@ -25,13 +35,13 @@ func ReadFile(filename string) ([]byte, error) {
 	return data, nil
 }
 
-func WriteFile(content []byte, filename string) error {
-	if !isFileJson(filename) {
+func (db *JsonDb) Write(content []byte) error {
+	if !isFileJson(db.filename) {
 		output.PrintRed("\nФайл должен быть с расширением json\n\n")
 		return errors.New("файл должен быть с расширением json")
 	}
 
-	file, err := os.Create(filename)
+	file, err := os.Create(db.filename)
 
 	if err != nil {
 		output.PrintRed(fmt.Sprintf("\nНе удалось создать файл. Ошибка: %s\n\n", err.Error()))

@@ -1,24 +1,18 @@
 package storage
 
 import (
-	"errors"
-
 	"a.tasks.11/files"
 )
 
 type Storage struct {
-	Filepath string
-	Data     []byte
+	Data []byte
+	db   files.JsonDb
 }
 
-func NewStorage(filepath string) (*Storage, error) {
-	if filepath == "" {
-		return nil, errors.New("filepath cannot be empty")
-	}
-
+func NewStorage(db *files.JsonDb) (*Storage, error) {
 	return &Storage{
-		Filepath: filepath,
-		Data:     []byte{},
+		Data: []byte{},
+		db:   *db,
 	}, nil
 }
 
@@ -27,11 +21,11 @@ func (storage *Storage) Save() {
 		storage.Data = []byte{}
 	}
 
-	files.WriteFile(storage.Data, storage.Filepath)
+	storage.db.Write(storage.Data)
 }
 
 func (storage *Storage) Read() error {
-	data, err := files.ReadFile(storage.Filepath)
+	data, err := storage.db.Read()
 
 	if err != nil {
 		return err
