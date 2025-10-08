@@ -10,10 +10,9 @@ import (
 )
 
 func main() {
+	output.PrintBlue("\n__ Менеджер паролей ___\n\n")
 
 	vaultFilename := "data.json"
-
-	output.PrintBlue("\n__ Менеджер паролей ___\n\n")
 	vault := account.NewVault(files.NewJsonDb(vaultFilename))
 
 menuVariant:

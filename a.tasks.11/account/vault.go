@@ -34,20 +34,24 @@ func NewVault(db *files.JsonDb) *VaultWithDb {
 		}
 	}
 
-	var vault VaultWithDb
+	var vault Vault
 	err = json.Unmarshal(file, &vault)
 
 	if err != nil {
 		output.PrintRed(fmt.Sprintf("\nОшибка чтения json данных: %s\n\n", err.Error()))
-		return nil
+
+		return &VaultWithDb{
+			Vault: Vault{
+				Accounts:  []AccountStruct{},
+				UpdatedAt: time.Now(),
+			},
+			db: *db,
+		}
 	}
 
 	return &VaultWithDb{
-		Vault: Vault{
-			Accounts:  []AccountStruct{},
-			UpdatedAt: time.Now(),
-		},
-		db: *db,
+		Vault: vault,
+		db:    *db,
 	}
 }
 
@@ -89,7 +93,7 @@ func (vault *VaultWithDb) RemoveAccountByUrl(url string) error {
 	return errors.New("нет аккаунтов с таким URL")
 }
 
-func (vault *VaultWithDb) ToBytes() ([]byte, error) {
+func (vault *Vault) ToBytes() ([]byte, error) {
 	jsonBytes, err := json.MarshalIndent(vault, "", "  ")
 
 	if err != nil {
@@ -102,7 +106,7 @@ func (vault *VaultWithDb) ToBytes() ([]byte, error) {
 func (vault *VaultWithDb) save() {
 	vault.UpdatedAt = time.Now()
 
-	data, err := vault.ToBytes()
+	data, err := vault.Vault.ToBytes()
 
 	if err != nil {
 		output.PrintRed(fmt.Sprintf("\nНе удалось преобразовать: %s\n\n", err.Error()))
